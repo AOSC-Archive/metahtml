@@ -1,0 +1,145 @@
+# Makefile.in: -*- Text -*-  Source for configure to make a Makefile from.
+# Author: Brian J. Fox (bfox@ai.mit.edu).
+#
+# This file is part of <Meta-HTML>(tm), a system for the rapid deployment
+# of Internet and Intranet applications via the use of the Meta-HTML
+# language.
+#
+#  Copyright (c) 1995, 1996, Brian J. Fox (bfox@ai.mit.edu).
+#  Copyright (c) 1996, Universal Access Inc. (http://www.ua.com).
+#
+# Meta-HTML is free software; you can redistribute it and/or modify
+# it under the terms of the UAI Free Software License as published
+# by Universal Access Inc.; either version 1, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# UAI Free Software License for more details.
+#
+# You should have received a copy of the UAI Free Software License
+# along with this program; if you have not, you may obtain one by
+# writing to:
+#
+# Universal Access Inc.
+# 129 El Paseo Court
+# Santa Barbara, CA
+# 93101
+
+# Items that were filled in by configure.
+VPATH	= @srcdir@
+srcdir	= @srcdir@
+DEFS	= @DEFS@
+INSTALL = @INSTALL@
+DASH_SHARED = @DASH_SHARED@
+SHARED_LD = @SHARED_LD@
+OS_LIBS = @OS_LIBS@
+EXE	= @EXE@
+SHARED_EXT = @SHARED_EXT@
+GCC_FPIC = @GCC_FPIC@
+WEBBASEDIR = @WEBBASEDIR@
+WEBDEF	= -DWEBBASEDIR='"$(WEBBASEDIR)"'
+VERSDEF = -DMHTML_VERSION_STRING='"$(MHTML_VERSION)"'
+prefix	= @prefix@
+exec_prefix = @exec_prefix@
+bindir	= $(exec_prefix)/bin
+libdir	= $(exec_prefix)/lib
+STDLIBS = $(OS_LIBS)
+
+# The real locations of programs.
+AR	= ar
+RANLIB	= @RANLIB@
+MKDIR	= mkdir
+LN	= ln
+CP	= cp
+RM	= rm -f
+LD	= ld
+
+# You cannot compile with anything other than GNU C.
+CC		 = gcc $(GCC_WARN)
+CXX		 = g++ 
+SHARED_LDXX	 = $(CXX)
+GCC_WARN	= -Wall -Wstrict-prototypes -Wshadow
+# PROFILE_FLAGS	= -pg
+DEBUG_FLAGS	= -g $(PROFILE_FLAGS)
+# OPTIMIZE_FLAGS	= -O69
+LOCAL_IFLAGS	= -I. -I./include -I./include/libmhtml
+SUBDIR_IFLAGS	= -I. -I.. -I../include -I../include/libmhtml
+SUBFLAGS	= CFLAGS='$(OPTIMIZE_FLAGS) $(DEBUG_FLAGS) -DHAVE_CONFIG_H $(SUBDIR_IFLAGS)'
+EXTRAINC	= @EXTRAINC@
+IFLAGS		= $(EXTRAINC) $(LOCAL_IFLAGS) $(GDBM_IN)
+CFLAGS		= $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS) $(PCFLAGS) -DHAVE_CONFIG_H
+LDFLAGS		= $(DEBUG_FLAGS)
+CXXFLAGS	= $(CFLAGS)
+
+MODULES		= example$(SHARED_EXT) elsewhen$(SHARED_EXT)
+
+TARGETS		= $(MODULES)
+
+FUNCTARG = functions.db.packed
+SECTARG  = sections.db.packed
+DOCUMENTATION = $(FUNCTARG) $(SECTARG)
+
+.SUFFIXES: .so .O .dll
+
+.c.o:
+	$(CC) $(GCC_FPIC) -c -o $*.o $(CFLAGS) $(IFLAGS) $(DEFS) $(VERSDEF) $<
+
+.c.so:
+	$(CC) $(GCC_FPIC) -c -o $*.o $(CFLAGS) $(IFLAGS) $(DEFS) $(VERSDEF) $<
+	$(SHARED_LD) $(LD_FLAGS) $(DASH_SHARED) -o $@ $*.o
+
+.cc.so:
+	$(CXX) $(GCC_FPIC) -c -o $*.o $(CXXFLAGS) $(IFLAGS) $(DEFS) $(VERSDEF) $<
+	$(SHARED_LDXX) $(LD_FLAGS) $(DASH_SHARED) -o $@ $*.o
+
+.cc.O:
+	$(CXX) $(GCC_FPIC) -c -o $*.o $(CXXFLAGS) $(IFLAGS) $(DEFS) $(VERSDEF) $<
+	$(SHARED_LDXX) $(LD_FLAGS) $(DASH_SHARED) -o $@ $*.o
+
+.c.O:
+	$(CC) $(GCC_FPIC) -c -o $*.o $(CFLAGS) $(IFLAGS) $(DEFS) $(VERSDEF)  $<
+	$(SHARED_LD) $(LD_FLAGS) $(DASH_SHARED) -o $@ $*.o
+
+.c.dll:
+	$(CC) $(GCC_FPIC) -c -o $*.o $(CFLAGS) $(IFLAGS) $(DEFS) $(VERSDEF)  $<
+	$(SHARED_LD) $(LD_FLAGS) $(DASH_SHARED) -o $@ $*.o
+
+all:	$(TARGETS) $(DOCUMENTATION)
+
+$(DOCUMENTATION): $(MODULES) ./createdoc
+	./createdoc -o $(FUNCTARG) -s $(SECTARG) *$(SHARED_EXT)
+
+./createdoc: createdoc.o
+	$(CC) -o createdoc createdoc.o
+
+Makefile: Makefile.in
+	./config.status
+
+install: $(TARGETS)
+	if [ ! -d $(libdir) ]; then mkdir $(libdir); fi
+	for file in $(TARGETS); do \
+	  $(INSTALL) $$file $(libdir)/$$file; \
+	done
+
+clean-executables: FORCE
+	$(RM) $(TARGETS); (cd libgd; make clean)
+
+clean:  FORCE
+	$(RM) *.o $(TARGETS) so_locations *.O *.so *.packed createdoc
+	if [ -f libgd/Makefile ]; then (cd libgd; make clean); fi
+	if [ -f compiler/Makefile ]; then (cd compiler; make clean); fi
+	if [ -f machine/Makefile ]; then (cd machine; make clean); fi
+
+
+distclean realclean: clean
+	$(RM) *.cache *.log Makefile *~
+	if [ -f libgd/Makefile ]; then (cd libgd; make realclean); fi
+	if [ -f compiler/Makefile ]; then (cd compiler; make realclean); fi
+	if [ -f machine/Makefile ]; then (cd machine; make realclean); fi
+
+tags TAGS: FORCE
+	etags *.c */*.c */*.mhtml
+
+FORCE:
