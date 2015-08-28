@@ -1,9 +1,11 @@
 dnl Process this file with autoconf to produce a configure script. -*- Bash -*-
-AC_INIT(Makefile.in)
+AC_INIT([metahtml], [6.11], [https://github.com/AOSC-Dev/metahtml])
+AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE([-Wall -a foreign])
 
 dnl make sure we are using a recent autoconf version
-AC_PREREQ(2.12)
+AC_PREREQ([2.61])
 
 dnl Default is to install in /www/bin.
 AC_PREFIX_DEFAULT(/www)
@@ -123,7 +125,7 @@ AC_PROG_RANLIB
 AC_PROG_YACC
 
 dnl Checks for header files.
-AC_STDC_HEADERS
+AC_HEADER_STDC
 AC_HEADER_DIRENT
 AC_CHECK_HEADERS(unistd.h stdarg.h string.h math.h)
 AC_CHECK_HEADERS(time.h sys/time.h file.h sys/file.h)
@@ -731,7 +733,7 @@ AC_SUBST(MODPERL_SO)
 dnl Checks for library functions.
 AC_FUNC_ALLOCA
 AC_FUNC_SETPGRP
-AC_FUNC_VFORK
+AC_FUNC_FORK
 AC_CHECK_FUNCS(getcwd memmove strerror strchr strcasecmp strdup flock qsort)
 AC_CHECK_FUNCS(getpwnam getgrent setuid seteuid setgid setsid)
 AC_CHECK_FUNCS(srandom random initstate setstate rand srand)
@@ -761,7 +763,18 @@ AC_SUBST(OS_LIBS)
 dnl Check for specific types.
 AC_TYPE_SIZE_T
 AC_TYPE_PID_T
-AC_TYPE_SIGNAL
+AC_DIAGNOSE([obsolete],[your code may safely assume C89 semantics that RETSIGTYPE is void.
+Remove this warning and the `AC_CACHE_CHECK' when you adjust the code.])dnl
+AC_CACHE_CHECK([return type of signal handlers],[ac_cv_type_signal],[AC_COMPILE_IFELSE(
+[AC_LANG_PROGRAM([#include <sys/types.h>
+#include <signal.h>
+],
+		 [return *(signal (0, 0)) (0) == 1;])],
+		   [ac_cv_type_signal=int],
+		   [ac_cv_type_signal=void])])
+AC_DEFINE_UNQUOTED([RETSIGTYPE],[$ac_cv_type_signal],[Define as the return type of signal handlers
+		    (`int' or `void').])
+
 AC_C_CONST
 AC_HAVE_TYPE_SIG_T
 AC_HAVE_TYPE_TIME_T
@@ -922,13 +935,14 @@ utility_makefiles="$utility_makefiles utilities/mkpass/Makefile"
 libutil_makefiles="libutils/Makefile libutils/compat/Makefile"
 session_makefiles="sessions/Makefile"
 
-AC_OUTPUT(Makefile mhc/Makefile server/Makefile engine/Makefile \
+AC_CONFIG_FILES([Makefile mhc/Makefile server/Makefile engine/Makefile \
 	  engine/fcgi/Makefile engine/fcgi/libfcgi/Makefile \
 	  $output_extra_file mdb/Makefile mdb/readline/Makefile \
 	  ${utility_makefiles} ${libutil_makefiles} ${session_makefiles} \
 	  dbutils/Makefile libmhtml/Makefile libserver/Makefile \
 	  modules/libgd/Makefile modules/Makefile $compiler_makefiles \
-	  $machine_makefiles)
+	  $machine_makefiles])
+AC_OUTPUT
 
 if test "$MODCOMPILER"; then
    echo ""
