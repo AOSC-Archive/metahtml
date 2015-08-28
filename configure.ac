@@ -1,8 +1,10 @@
-dnl Process this file with autoconf to produce a configure script. -*- Bash -*-
+dnl Process this file with autoconf to produce a configure script. -*- Autoconf -*-
 AC_INIT([metahtml], [6.11], [https://github.com/AOSC-Dev/metahtml])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE([-Wall -a foreign])
+AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_AUX_DIR([build-aux])
+AM_INIT_AUTOMAKE([-Wall foreign])
 
 dnl make sure we are using a recent autoconf version
 AC_PREREQ([2.61])
@@ -77,6 +79,7 @@ AC_ARG_WITH(electric-fence,
 AC_ARG_WITH(des,
 	[  --with-des              use EAY's DES library for encryption],
 	with_des=$withval)
+dnl ' workaround with syntax highlighter
 AC_ARG_WITH(msql,
 	[  --with-msql             allow the use of the Minerva SQL database],
 	with_msql=$withval)
