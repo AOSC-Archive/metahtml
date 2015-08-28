@@ -33,6 +33,7 @@ void fail (void) { abort (); }
 static mh_number_t
 mh_object_read_number (mh_string_t string);
 
+/** 
 static unsigned char *
 strndup (unsigned char *string, size_t size)
 {
@@ -43,6 +44,7 @@ strndup (unsigned char *string, size_t size)
   result [size] = 0;
   return result;
 }
+*/
 
 /* 
  * mh_string_to_string_escaped ()
